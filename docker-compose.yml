@@ -21,7 +21,7 @@ services:
   elastiflow-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.8.1
     container_name: elastiflow-elasticsearch
-    restart: 'no'
+    restart: always
     ulimits:
       memlock:
         soft: -1
@@ -41,13 +41,13 @@ services:
       # JVM Heap size
       #   - this should be at least 2GB for simple testing, receiving only a few flows per second.
       #   - for production environments upto 31GB is recommended.
-      ES_JAVA_OPTS: '-Xms4g -Xmx4g'
+      ES_JAVA_OPTS: '-Xms8g -Xmx8g'
 
       cluster.name: elastiflow
 
       bootstrap.memory_lock: 'true'
 
-      network.host: 0.0.0.0
+      network.host: 127.0.0.1
       http.port: 9200
       discovery.type: 'single-node'
 
@@ -59,12 +59,12 @@ services:
   elastiflow-kibana:
     image: docker.elastic.co/kibana/kibana:7.8.1
     container_name: elastiflow-kibana
-    restart: 'no'
+    restart: always
     depends_on:
       - elastiflow-elasticsearch
     network_mode: host
     environment:
-      SERVER_HOST: 0.0.0.0
+      SERVER_HOST: 127.0.0.1
       SERVER_PORT: 5601
       SERVER_MAXPAYLOADBYTES: 8388608
 
@@ -82,13 +82,16 @@ services:
   elastiflow-logstash:
     image: robcowart/elastiflow-logstash:4.0.1
     container_name: elastiflow-logstash
-    restart: 'no'
+    restart: always
     depends_on:
       - elastiflow-elasticsearch
     network_mode: host
     environment:
       # JVM Heap size - this MUST be at least 3GB (4GB preferred)
       LS_JAVA_OPTS: '-Xms4g -Xmx4g'
+
+      # Set number of workers
+      PIPELINE_WORKERS: 12
 
       # ElastiFlow global configuration
       ELASTIFLOW_AGENT_ID: elastiflow
